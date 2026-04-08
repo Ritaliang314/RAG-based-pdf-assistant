@@ -11,7 +11,7 @@ from langchain_classic.chains.combine_documents import create_stuff_documents_ch
 from langchain_classic.chains import create_retrieval_chain
 
 def extract_text_from_pdf(pdf_file) -> str:
-    """從 PDF 擷取文字"""
+    """從 PDF 抓文字"""
     pdf_reader = PdfReader(pdf_file)
     text = []
 
@@ -24,7 +24,7 @@ def extract_text_from_pdf(pdf_file) -> str:
 
 
 def build_vectorstore(text: str, api_key: str):
-    """將文字切塊後建立向量資料庫"""
+    """文字切塊+建立embedding DB"""
     text_splitter = RecursiveCharacterTextSplitter(
         chunk_size=800,
         chunk_overlap=150,
@@ -32,13 +32,13 @@ def build_vectorstore(text: str, api_key: str):
     )
     chunks = text_splitter.split_text(text)
 
-    # 去掉空白 chunk
+    
     chunks = [c.strip() for c in chunks if c.strip()]
 
     if not chunks:
         return None
 
-    # 可先限制前幾百段，避免超大 PDF 一次打爆
+    # 限制前200個chunks
     chunks = chunks[:200]
 
     embeddings = GoogleGenerativeAIEmbeddings(
@@ -55,7 +55,6 @@ def build_vectorstore(text: str, api_key: str):
 
 
 def build_rag_chain(vectorstore, api_key: str):
-    """建立 Retrieval QA Chain"""
     llm = ChatGoogleGenerativeAI(
         model="gemini-2.5-flash-lite",
         temperature=0,
